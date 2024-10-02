@@ -58,7 +58,7 @@ contract HelperConfig is HelperConfigConstants, Script {
     }
 
     function getConfig() public returns (NetworkConfig memory) {
-        return getConfigByChainId(block.chainId);
+        return getConfigByChainId(block.chainid);
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {

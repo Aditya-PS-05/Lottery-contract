@@ -24,10 +24,10 @@ contract DeployRaffle is Script {
 
         vm.stopBroadcast();
 
-        return (raffle, HelperConfig);
+        return (raffle, helperConfig);
     }
 
     function run() public {
-        return deployRaffle();
+        deployRaffle();
     }
 }

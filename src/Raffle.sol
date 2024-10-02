@@ -42,6 +42,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     RaffleState private s_raffleState;
 
     // emits
+    event RequestedRaffleWinner(uint256 indexed requestId);
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
 
@@ -130,10 +131,12 @@ contract Raffle is VRFConsumerBaseV2Plus {
             )
         });
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+
+        emit RequestedRaffleWinner(requestId);
     }
 
     // CEI Method: Checks, Methods and Interactions
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(uint256, /* requestId */ uint256[] calldata randomWords) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
 
         address payable recentWinner = s_players[indexOfWinner];
