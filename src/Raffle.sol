@@ -132,6 +132,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         });
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
 
+        // Quiz -> Is this reduntant
         emit RequestedRaffleWinner(requestId);
     }
 
@@ -170,5 +171,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function getPlayer(uint256 indexOfPlayer) external view returns (address) {
         return s_players[indexOfPlayer];
+    }
+
+    function getLastTimeStamp() external view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRecentWinner() external view returns (address) {
+        return s_recentWinner;
     }
 }

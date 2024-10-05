@@ -1,4 +1,4 @@
-// SPDX-License-Identifer: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.19;
 
@@ -12,8 +12,8 @@ abstract contract HelperConfigConstants {
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 
     uint96 public constant MOCK_BASE_FEE = 0.25 ether;
-    uint96 public constant MOCK_GAS_PRICE_LINK = 4e15;
-    int256 public constant MOCK_WEI_PER_UNIT_LINK = 1e9;
+    uint96 public constant MOCK_GAS_PRICE_LINK = 1e9;
+    int256 public constant MOCK_WEI_PER_UNIT_LINK = 4e15;
 }
 
 contract HelperConfig is HelperConfigConstants, Script {
@@ -28,6 +28,7 @@ contract HelperConfig is HelperConfigConstants, Script {
         uint32 callbackGasLimit;
         uint256 subscriptionId;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -45,7 +46,8 @@ contract HelperConfig is HelperConfigConstants, Script {
             gasLane: 0x130dba50ad435d4ecc214aad0d5820474137bd68e7e77724144f27c3c377d3d4,
             callbackGasLimit: 500000,
             subscriptionId: 24231130315547724191821596450727177418118307832442970098794396957239277776165,
-            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0x9AC2C7F280d4204C7148032b2dE1C21C2175a84f
         });
     }
 
@@ -82,7 +84,8 @@ contract HelperConfig is HelperConfigConstants, Script {
             gasLane: 0x130dba50ad435d4ecc214aad0d5820474137bd68e7e77724144f27c3c377d3d4,
             callbackGasLimit: 500000,
             subscriptionId: 0,
-            link: address(linkToken)
+            link: address(linkToken),
+            account: 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
         });
 
         return localNetworkConfig;
