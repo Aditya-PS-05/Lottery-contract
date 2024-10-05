@@ -8,8 +8,9 @@ import {Raffle} from "../../src/Raffle.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {HelperConfigConstants} from "../../script/HelperConfig.s.sol";
 
-contract RaffleTest is Test {
+contract RaffleTest is Test, HelperConfigConstants {
     Raffle public raffle;
     HelperConfig public helperConfig;
 
@@ -26,7 +27,23 @@ contract RaffleTest is Test {
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
 
-    function setUp() external {
+    modifier raffleEntered() {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entraceFee}();
+        vm.warp(block.timestamp + interval + 1); // to pass the deadline
+        vm.roll(block.number + 1);
+
+        _;
+    }
+
+    modifier skipFork() {
+        if(block.chainid != LOCAL_CHAIN_ID) {
+            return;
+        }
+        _;
+    }
+
+    function setUp() external skipFork {
         DeployRaffle deployer = new DeployRaffle();
         (raffle, helperConfig) = deployer.deployRaffle();
 
@@ -42,7 +59,7 @@ contract RaffleTest is Test {
         vm.deal(PLAYER, STARTING_PLAYER_BALANCE);
     }
 
-    function testRaffleIntializesInOpenState() public view {
+    function testRaffleIntializesInOpenState() public view skipFork{
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
 
@@ -57,7 +74,7 @@ contract RaffleTest is Test {
         raffle.enterRaffle();
     }
 
-    function testRaffleRecordsWhenPlayerEnter() public {
+    function testRaffleRecordsWhenPlayerEnter() public skipFork{
         // Arrange
         vm.prank(PLAYER);
         // Act
@@ -69,7 +86,7 @@ contract RaffleTest is Test {
         assert(playerRecord == PLAYER);
     }
 
-    function testEnterRaffleEmitsEvent() public {
+    function testEnterRaffleEmitsEvent() public skipFork{
         // Arrange
         vm.prank(PLAYER);
         // Act
@@ -81,16 +98,7 @@ contract RaffleTest is Test {
         raffle.enterRaffle{value: entraceFee}();
     }
 
-    modifier raffleEntered() {
-        vm.prank(PLAYER);
-        raffle.enterRaffle{value: entraceFee}();
-        vm.warp(block.timestamp + interval + 1); // to pass the deadline
-        vm.roll(block.number + 1);
-
-        _;
-    }
-
-    function testNotEnterWhenRaffleCalculating() public raffleEntered {
+    function testNotEnterWhenRaffleCalculating() public raffleEntered skipFork{
         //Arrange
         raffle.performUpkeep("");
 
@@ -101,7 +109,7 @@ contract RaffleTest is Test {
         raffle.enterRaffle{value: entraceFee}();
     }
 
-    function testCheckUpKeepReturnsFalseWhenItHasNoBalance() public {
+    function testCheckUpKeepReturnsFalseWhenItHasNoBalance() public skipFork{
         // Arrange
         vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
@@ -113,7 +121,7 @@ contract RaffleTest is Test {
         assert(!upKeepNeeded);
     }
 
-    function testCheckUpReturnsFalseIfRaffleIsntOpen() public raffleEntered {
+    function testCheckUpReturnsFalseIfRaffleIsntOpen() public raffleEntered skipFork{
         raffle.performUpkeep("");
 
         // Act
@@ -127,12 +135,12 @@ contract RaffleTest is Test {
 
     function testCheckUpKeepReturnsTrueWhenParamsAreGood() public {}
 
-    function testPerformUpKeepCanOnlyRunIfCheckUpKeepIsTrue() public raffleEntered {
+    function testPerformUpKeepCanOnlyRunIfCheckUpKeepIsTrue() public raffleEntered skipFork{
         // Act/Assert
         raffle.performUpkeep("");
     }
 
-    function testPerformUpKeepRevertsIfCheckUpKeepIsFalse() public {
+    function testPerformUpKeepRevertsIfCheckUpKeepIsFalse() public skipFork{
         // Arrange
         uint256 currentBalance = 0;
         uint256 numPlayers = 0;
@@ -152,7 +160,7 @@ contract RaffleTest is Test {
 
     // What if we need to get data from emitted events in our tests?
 
-    function testPerformUpKeepUpdatesRaffleStateAndEmitsRequestId() public raffleEntered {
+    function testPerformUpKeepUpdatesRaffleStateAndEmitsRequestId() public raffleEntered skipFork{
         // Act
         vm.recordLogs();
         raffle.performUpkeep("");
@@ -167,13 +175,13 @@ contract RaffleTest is Test {
     }
 
     // Fuzz Testing
-    function testFulfillrandomwWordsCanOnlyBeCalledAfterPerformUpKeep(uint256 requestId) public raffleEntered {
+    function testFulfillrandomwWordsCanOnlyBeCalledAfterPerformUpKeep(uint256 requestId) public raffleEntered skipFork{
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(requestId, address(raffle));
     }
 
     // Final big test
-    function testFulfillrandomWordsPicksAWinnerResetsAndSendMoney() public raffleEntered {
+    function testFulfillrandomWordsPicksAWinnerResetsAndSendMoney() public raffleEntered skipFork{
         // Arrange
         uint256 additionalEntrants = 3;
         uint256 startingIndex = 1;
